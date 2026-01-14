@@ -1,5 +1,6 @@
 import random
 
+
 # Generate a random integer between a specified range (inclusive)
 # Example: a random integer between 1 and 10 (inclusive)
 random_integer = random.randint(1, 10)
