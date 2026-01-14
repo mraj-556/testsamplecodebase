@@ -24,7 +24,7 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          aws-region: ${{ vars.AWS_REGION }}
 
       - name: Install Terraform
         uses: hashicorp/setup-terraform@v2
@@ -38,20 +38,20 @@ jobs:
       - name: Terraform Plan
         working-directory: terraform/prod
         env:
-          TF_VAR_aws_region: ${{ secrets.AWS_REGION }}
+          TF_VAR_aws_region: ${{ vars.AWS_REGION }}
         run: terraform plan -out=tfplan
 
       - name: Terraform Apply
         if: ${{ github.ref == 'refs/heads/main' }}
         working-directory: terraform/prod
         env:
-          TF_VAR_aws_region: ${{ secrets.AWS_REGION }}
+          TF_VAR_aws_region: ${{ vars.AWS_REGION }}
         run: terraform apply -auto-approve tfplan
 
       - name: Output API Endpoint
         if: ${{ github.ref == 'refs/heads/main' }}
         working-directory: terraform/prod
         env:
-          TF_VAR_aws_region: ${{ secrets.AWS_REGION }}
+          TF_VAR_aws_region: ${{ vars.AWS_REGION }}
         run: |
           terraform output -raw api_endpoint
