@@ -1,1 +1,49 @@
-name: Deploy Production Infrastructure (AWS)\n\non:\n  push:\n    branches:\n      - main\n\njobs:\n  terraform:\n    runs-on: ubuntu-latest\n    environment: prod\n\n    steps:\n      - name: Checkout repository\n        uses: actions/checkout@v3\n\n      - name: Set up Python (for archive_file data source)\n        uses: actions/setup-python@v4\n        with:\n          python-version: '3.9'\n\n      - name: Configure AWS credentials\n        uses: aws-actions/configure-aws-credentials@v2\n        with:\n          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}\n          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}\n          aws-region: ${{ vars.AWS_REGION }}\n\n      - name: Install Terraform\n        uses: hashicorp/setup-terraform@v2\n        with:\n          terraform_version: '1.6.0'\n\n      - name: Terraform Init\n        working-directory: terraform/prod\n        run: terraform init\n\n      - name: Terraform Plan\n        working-directory: terraform/prod\n        env:\n          TF_VAR_aws_region: ${{ vars.AWS_REGION }}\n        run: terraform plan -out=tfplan\n\n      - name: Terraform Apply\n        if: github.ref == 'refs/heads/main'\n        working-directory: terraform/prod\n        env:\n          TF_VAR_aws_region: ${{ vars.AWS_REGION }}\n        run: terraform apply -auto-approve tfplan\n
+name: Deploy Production Infrastructure (AWS)
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+    environment: prod
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python (for archive_file data source)
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Install Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: '1.6.0'
+
+      - name: Terraform Init
+        working-directory: terraform/prod
+        run: terraform init
+
+      - name: Terraform Plan
+        working-directory: terraform/prod
+        env:
+          TF_VAR_aws_region: ${{ vars.AWS_REGION }}
+        run: terraform plan -out=tfplan
+
+      - name: Terraform Apply
+        if: ${{ github.ref == 'refs/heads/main' }}
+        working-directory: terraform/prod
+        env:
+          TF_VAR_aws_region: ${{ vars.AWS_REGION }}
+        run: terraform apply -auto-approve tfplan
