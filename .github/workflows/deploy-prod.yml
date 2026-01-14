@@ -1,0 +1,49 @@
+name: Deploy Production Infrastructure (AWS)
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+    environment: prod
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python (for archive_file data source)
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Install Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: '1.6.0'
+
+      - name: Terraform Init
+        working-directory: terraform/prod
+        run: terraform init
+
+      - name: Terraform Plan
+        working-directory: terraform/prod
+        env:
+          TF_VAR_aws_region: ${{ vars.AWS_REGION }}
+        run: terraform plan -out=tfplan
+
+      - name: Terraform Apply
+        if: ${{ github.ref == 'refs/heads/main' }}
+        working-directory: terraform/prod
+        env:
+          TF_VAR_aws_region: ${{ vars.AWS_REGION }}
+        run: terraform apply -auto-approve tfplan
