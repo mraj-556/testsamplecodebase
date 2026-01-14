@@ -1,0 +1,49 @@
+name: Destroy Production Infrastructure (AWS)
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type "DESTROY" to confirm destruction'
+        required: true
+        default: ''
+
+jobs:
+  destroy:
+    if: ${{ github.event.inputs.confirm == 'DESTROY' }}
+    runs-on: ubuntu-latest
+    environment: prod
+    steps:
+      - name: Checkout main repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Checkout infrastructure repository
+        uses: actions/checkout@v3
+        with:
+          repository: mraj-556/testsamplecodebase-infrastructure
+          token: ${{ secrets.GITHUB_TOKEN }}
+          path: infra
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Install Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: '1.6.0'
+
+      - name: Terraform Init
+        working-directory: infra/terraform/prod
+        run: terraform init
+
+      - name: Terraform Destroy
+        working-directory: infra/terraform/prod
+        env:
+          TF_VAR_aws_region: ${{ vars.AWS_REGION }}
+        run: terraform destroy -auto-approve
