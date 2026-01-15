@@ -1,4 +1,4 @@
-name: CI/CD Pipeline
+name: CI
 
 on:
   pull_request:
@@ -14,16 +14,17 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
         with:
-          node-version: '20'
+          python-version: '3.11'
 
       - name: Install dependencies
-        run: npm install
+        run: |
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; else echo "No requirements.txt found"; fi
 
-      - name: Run tests
-        run: npm test
+      - name: Run script
+        run: python random_int.py
 
   deploy:
     needs: build-and-test
