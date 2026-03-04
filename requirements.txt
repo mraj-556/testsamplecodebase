@@ -1,0 +1,4 @@
+# Generated from dependency analysis
+# No external dependencies detected
+# Add packages as needed:
+# flask==2.3.2
